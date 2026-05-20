@@ -2,7 +2,10 @@ from sqlmodel import Session, select
 from db import ExecutionTrace, Execution, engine
 from typing import List, Dict, Optional
 from datetime import datetime
+import json
 import statistics
+
+TERMINAL_STATUSES = ("success", "failed", "cancelled")
 
 
 def get_traces_for_execution(session: Session, execution_id: str) -> List[ExecutionTrace]:
@@ -15,10 +18,12 @@ def get_traces_for_execution(session: Session, execution_id: str) -> List[Execut
 
 def compute_execution_metrics(execution_id: str) -> dict:
     with Session(engine) as session:
-        traces = get_traces_for_execution(session, execution_id)
         execution = session.exec(
             select(Execution).where(Execution.execution_id == execution_id)
         ).first()
+        if execution and execution.status in TERMINAL_STATUSES and execution.metrics_json:
+            return json.loads(execution.metrics_json)
+        traces = get_traces_for_execution(session, execution_id)
 
     if not traces:
         return {"error": "No traces found"}
@@ -54,7 +59,7 @@ def compute_execution_metrics(execution_id: str) -> dict:
             "fail_count": data["outcomes"].count("fail"),
         }
 
-    return {
+    result = {
         "execution_id": execution_id,
         "total_steps": total,
         "success": success,
@@ -80,6 +85,18 @@ def compute_execution_metrics(execution_id: str) -> dict:
             for t in sorted(traces, key=lambda x: x.timestamp)
         ],
     }
+
+    if execution and execution.status in TERMINAL_STATUSES and not execution.metrics_json:
+        with Session(engine) as session:
+            ex = session.exec(
+                select(Execution).where(Execution.execution_id == execution_id)
+            ).first()
+            if ex:
+                ex.metrics_json = json.dumps(result)
+                session.add(ex)
+                session.commit()
+
+    return result
 
 
 def get_all_executions_summary(workflow_id: Optional[str] = None) -> List[dict]:

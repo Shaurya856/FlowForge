@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field, create_engine, Session, select
+from sqlalchemy import event
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
@@ -10,6 +11,14 @@ DATABASE_URL = "sqlite:///./workflow_platform.db"
 engine = create_engine(DATABASE_URL, echo=False)
 
 
+@event.listens_for(engine, "connect")
+def _set_sqlite_pragmas(dbapi_conn, _):
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.close()
+
+
 def get_session():
     with Session(engine) as session:
         yield session
@@ -17,6 +26,23 @@ def get_session():
 
 def init_db():
     SQLModel.metadata.create_all(engine)
+    _run_migrations()
+
+
+def _run_migrations():
+    """Lightweight in-place migrations for columns added after initial schema."""
+    with engine.begin() as conn:
+        step_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(workflowstep)").fetchall()}
+        if "timeout_seconds" not in step_cols:
+            conn.exec_driver_sql(
+                "ALTER TABLE workflowstep ADD COLUMN timeout_seconds INTEGER DEFAULT 30"
+            )
+
+        exec_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(execution)").fetchall()}
+        if "metrics_json" not in exec_cols:
+            conn.exec_driver_sql("ALTER TABLE execution ADD COLUMN metrics_json TEXT")
+        if "anomalies_json" not in exec_cols:
+            conn.exec_driver_sql("ALTER TABLE execution ADD COLUMN anomalies_json TEXT")
 
 
 # ─── Models ───────────────────────────────────────────────────────────────────
@@ -34,6 +60,7 @@ class WorkflowStep(SQLModel, table=True):
     condition: Optional[str] = None    # e.g. "status == 200"
     retry_count: int = Field(default=0)
     execution_order: int = Field(default=0)
+    timeout_seconds: int = Field(default=30)
 
 
 class Workflow(SQLModel, table=True):
@@ -56,6 +83,8 @@ class Execution(SQLModel, table=True):
     iterations: int = Field(default=1)
     use_mock: bool = Field(default=False)
     error_message: Optional[str] = None
+    metrics_json: Optional[str] = None    # cached compute_execution_metrics result
+    anomalies_json: Optional[str] = None  # cached detect_anomalies result
 
 
 class ExecutionTrace(SQLModel, table=True):

@@ -1,8 +1,10 @@
-import numpy as np
 from sqlmodel import Session, select
-from db import ExecutionTrace, engine
+from db import ExecutionTrace, Execution, engine
 from typing import List, Dict, Optional
+import json
 import statistics
+
+TERMINAL_STATUSES = ("success", "failed", "cancelled")
 
 
 # ─── Statistical anomaly detection (no LLM, runs on any laptop) ───────────────
@@ -89,6 +91,12 @@ def classify_anomaly(
 def detect_anomalies(execution_id: str) -> dict:
     """Run anomaly detection on a completed execution."""
     with Session(engine) as session:
+        execution = session.exec(
+            select(Execution).where(Execution.execution_id == execution_id)
+        ).first()
+        if execution and execution.status in TERMINAL_STATUSES and execution.anomalies_json:
+            return json.loads(execution.anomalies_json)
+
         traces = list(
             session.exec(
                 select(ExecutionTrace).where(ExecutionTrace.execution_id == execution_id)
@@ -157,7 +165,7 @@ def detect_anomalies(execution_id: str) -> dict:
     else:
         summary = "✅ No anomalies detected. Execution within normal parameters."
 
-    return {
+    result = {
         "execution_id": execution_id,
         "anomaly_count": len(anomalies),
         "critical_count": critical,
@@ -165,6 +173,18 @@ def detect_anomalies(execution_id: str) -> dict:
         "summary": summary,
         "anomalies": anomalies,
     }
+
+    if execution and execution.status in TERMINAL_STATUSES and not execution.anomalies_json:
+        with Session(engine) as session:
+            ex = session.exec(
+                select(Execution).where(Execution.execution_id == execution_id)
+            ).first()
+            if ex:
+                ex.anomalies_json = json.dumps(result)
+                session.add(ex)
+                session.commit()
+
+    return result
 
 
 def build_baseline(workflow_id: str) -> dict:

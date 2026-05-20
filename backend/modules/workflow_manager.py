@@ -63,6 +63,7 @@ def add_step(
     condition: str = None,
     retry_count: int = 0,
     execution_order: int = 0,
+    timeout_seconds: int = 30,
 ) -> WorkflowStep:
     step = WorkflowStep(
         workflow_id=workflow_id,
@@ -75,6 +76,7 @@ def add_step(
         condition=condition,
         retry_count=retry_count,
         execution_order=execution_order,
+        timeout_seconds=timeout_seconds if timeout_seconds is not None else 30,
     )
     session.add(step)
     session.commit()

@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
 import {
-  getWorkflows, startExecution, getExecutions,
-  getTraces, getExecution
+  getWorkflows, startExecution, getExecutions, cancelExecution
 } from '../../api/client'
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, Loader, Square } from 'lucide-react'
 
 function StatusBadge({ status }: { status: string }) {
   const map: any = {
     success: 'badge-success', failed: 'badge-danger',
-    running: 'badge-warning', pending: 'badge-info'
+    running: 'badge-warning', pending: 'badge-info',
+    cancelled: 'badge-default',
   }
   return <span className={`badge ${map[status] || 'badge-default'}`}>{status}</span>
 }
@@ -23,10 +23,29 @@ function TracePanel({ executionId }: { executionId: string }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const load = () => getTraces(executionId).then(r => setTraces(r.data)).finally(() => setLoading(false))
-    load()
-    const interval = setInterval(load, 2000)
-    return () => clearInterval(interval)
+    setTraces([])
+    setLoading(true)
+
+    const es = new EventSource(`http://localhost:8000/executions/${executionId}/stream`)
+
+    es.addEventListener('trace', (e: MessageEvent) => {
+      const trace = JSON.parse(e.data)
+      setLoading(false)
+      setTraces(prev => [...prev, trace])
+    })
+
+    es.addEventListener('status', (e: MessageEvent) => {
+      const { status } = JSON.parse(e.data)
+      setLoading(false)
+      if (status === 'success' || status === 'failed') es.close()
+    })
+
+    es.addEventListener('error', () => {
+      setLoading(false)
+      es.close()
+    })
+
+    return () => es.close()
   }, [executionId])
 
   if (loading) return <div className="empty-state">Loading traces…</div>
@@ -210,8 +229,27 @@ export default function Execution() {
 
         {/* Right: Traces */}
         <div className="card">
-          <div className="card-title">
-            {selectedExec ? `Execution Traces · ${selectedExec.slice(0, 12)}…` : 'Execution Traces'}
+          <div className="card-title flex-between">
+            <span>
+              {selectedExec ? `Execution Traces · ${selectedExec.slice(0, 12)}…` : 'Execution Traces'}
+            </span>
+            {selectedExec && (() => {
+              const ex = executions.find(e => e.execution_id === selectedExec)
+              const cancellable = ex && (ex.status === 'running' || ex.status === 'pending')
+              if (!cancellable) return null
+              return (
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={async () => {
+                    await cancelExecution(selectedExec)
+                    loadExecutions()
+                  }}
+                  title="Stop this execution"
+                >
+                  <Square size={12} /> Cancel
+                </button>
+              )
+            })()}
           </div>
           {!selectedExec
             ? <div className="empty-state">Select an execution from the left to view traces</div>

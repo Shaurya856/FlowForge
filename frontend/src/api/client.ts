@@ -8,6 +8,8 @@ export const createWorkflow = (data: { name: string; description: string }) => a
 export const deleteWorkflow = (id: string) => api.delete(`/workflows/${id}`)
 export const updateWorkflow = (id: string, data: any) => api.put(`/workflows/${id}`, data)
 export const validateWorkflow = (id: string) => api.get(`/workflows/${id}/validate`)
+export const exportWorkflow = (id: string) => api.get(`/workflows/${id}/export`)
+export const importWorkflow = (data: any) => api.post('/workflows/import', data)
 
 // Steps
 export const getSteps = (workflowId: string) => api.get(`/workflows/${workflowId}/steps`)
@@ -23,6 +25,7 @@ export const getExecution = (id: string) => api.get(`/executions/${id}`)
 export const getTraces = (id: string) => api.get(`/executions/${id}/traces`)
 export const getMetrics = (id: string) => api.get(`/executions/${id}/metrics`)
 export const getAnomalies = (id: string) => api.get(`/executions/${id}/anomalies`)
+export const cancelExecution = (id: string) => api.post(`/executions/${id}/cancel`)
 
 // Mock
 export const getMockConfigs = () => api.get('/mock-configs')

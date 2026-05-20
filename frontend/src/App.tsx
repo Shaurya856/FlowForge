@@ -5,6 +5,7 @@ import Execution from './pages/Execution/Execution'
 import Analytics from './pages/Analytics/Analytics'
 import AIInsights from './pages/AIInsights/AIInsights'
 import MockAPI from './pages/MockAPI/MockAPI'
+import ErrorBoundary from './components/ErrorBoundary'
 import {
   LayoutDashboard, GitBranch, Play, BarChart2,
   Brain, Server, Zap
@@ -47,14 +48,16 @@ export default function App() {
           </div>
         </aside>
         <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/workflows" element={<Workflows />} />
-            <Route path="/execution" element={<Execution />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/ai-insights" element={<AIInsights />} />
-            <Route path="/mock-api" element={<MockAPI />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/workflows" element={<Workflows />} />
+              <Route path="/execution" element={<Execution />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/ai-insights" element={<AIInsights />} />
+              <Route path="/mock-api" element={<MockAPI />} />
+            </Routes>
+          </ErrorBoundary>
         </main>
       </div>
     </BrowserRouter>
