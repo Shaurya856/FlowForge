@@ -1,5 +1,6 @@
 # FlowForge — Scenario-Based API Workflow Execution Platform
-## BCSE301P Software Engineering Lab | Shaurya Maloo 23BAI0185
+
+A self-hosted load-testing and API orchestration tool. Define multi-step workflows, run them at configurable concurrency, stream traces live, and detect performance anomalies — all from a single laptop.
 
 ---
 

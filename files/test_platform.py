@@ -1,7 +1,5 @@
 """
-Test Suite for Scenario-Based API Workflow Execution and Load Simulation Platform
-BCSE301P - Software Engineering Lab
-Author: Shaurya Maloo (23BAI0185)
+Test suite for the FlowForge workflow execution and load simulation platform.
 """
 
 import pytest

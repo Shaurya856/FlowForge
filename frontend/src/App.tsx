@@ -44,7 +44,7 @@ export default function App() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <span>BCSE301P · 23BAI0185</span>
+            <span>FlowForge</span>
           </div>
         </aside>
         <main className="main-content">
