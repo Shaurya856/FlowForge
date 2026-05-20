@@ -10,6 +10,7 @@ import {
   LayoutDashboard, GitBranch, Play, BarChart2,
   Brain, Server, Zap
 } from 'lucide-react'
+// @ts-ignore
 import './App.css'
 
 const navItems = [

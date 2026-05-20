@@ -2,6 +2,8 @@
 
 A self-hosted load-testing and API orchestration tool. Define multi-step workflows, run them at configurable concurrency, stream traces live, and detect performance anomalies — all from a single laptop.
 
+> **Single-user by design.** FlowForge is a single-developer tool meant to run on `localhost` only. There is no authentication, no multi-user support, and no plans for either — that's intentional, not a missing feature. Don't expose the backend on a public interface.
+
 ---
 
 ## Quick Start
