@@ -63,6 +63,11 @@ def cancel_execution(execution_id: str) -> bool:
     return True
 
 
+def _retry_backoff_seconds(attempt: int) -> float:
+    """Exponential backoff capped at 30s: 0.5, 1, 2, 4, 8, 16, 30, 30, ..."""
+    return min(0.5 * (2 ** attempt), 30)
+
+
 # ─── Variable resolver ─────────────────────────────────────────────────────────
 
 def resolve_variables(text: str, variables: dict) -> str:
@@ -228,9 +233,7 @@ async def run_workflow_instance(
             if result["outcome"] != "fail":
                 break
             if attempt < retries:
-                # Exponential backoff: 0.5s, 1s, 2s, 4s, 8s … capped at 30s.
-                # Stops a flapping upstream from getting hammered.
-                await asyncio.sleep(min(0.5 * (2 ** attempt), 30))
+                await asyncio.sleep(_retry_backoff_seconds(attempt))
 
         traces.append({
             "execution_id": execution_id,
