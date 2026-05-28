@@ -28,6 +28,7 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+artifacts/
 
 # ── Node / Frontend ───────────────────────────────────────────────────────────
 node_modules/
