@@ -8,7 +8,23 @@ A self-hosted load-testing and API orchestration tool. Define multi-step workflo
 
 ## Quick Start
 
-### 1. Backend
+### Docker (recommended)
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) or Docker Engine + Compose plugin.
+
+```bash
+docker compose up --build
+```
+
+UI available at: http://localhost:3000
+
+The SQLite database is stored in a named Docker volume (`db_data`) and persists across restarts. To wipe it: `docker compose down -v`.
+
+---
+
+### Manual setup
+
+#### 1. Backend
 ```bash
 cd backend
 python -m venv venv
@@ -18,7 +34,7 @@ uvicorn main:app --reload --port 8000
 ```
 API docs auto-available at: http://localhost:8000/docs
 
-### 2. Frontend
+#### 2. Frontend
 ```bash
 cd frontend
 npm install
@@ -26,7 +42,7 @@ npm run dev
 ```
 UI available at: http://localhost:5173
 
-### 3. Tests
+#### 3. Tests
 ```bash
 cd backend
 source venv/bin/activate        # Windows: venv\Scripts\activate

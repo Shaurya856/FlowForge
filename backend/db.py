@@ -2,12 +2,13 @@ from sqlmodel import SQLModel, Field, create_engine, Session, select
 from sqlalchemy import event
 from typing import Optional
 from datetime import datetime, timezone
+import os
 import uuid
 
 def _now():
     return datetime.now(timezone.utc)
 
-DATABASE_URL = "sqlite:///./workflow_platform.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./workflow_platform.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
 
