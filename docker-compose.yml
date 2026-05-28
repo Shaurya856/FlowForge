@@ -14,6 +14,11 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    command: >
+      sh -c "echo '' &&
+             echo '  FlowForge is ready at http://localhost:3000' &&
+             echo '' &&
+             nginx -g 'daemon off;'"
 
 volumes:
   db_data:

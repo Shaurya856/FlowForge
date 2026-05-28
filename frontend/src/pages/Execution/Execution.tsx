@@ -26,7 +26,7 @@ function TracePanel({ executionId }: { executionId: string }) {
     setTraces([])
     setLoading(true)
 
-    const es = new EventSource(`http://localhost:8000/executions/${executionId}/stream`)
+    const es = new EventSource(`/api/executions/${executionId}/stream`)
 
     es.addEventListener('trace', (e: MessageEvent) => {
       const trace = JSON.parse(e.data)
