@@ -1,3 +1,5 @@
+name: flowforge
+
 services:
   backend:
     build: ./backend
