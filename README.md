@@ -86,7 +86,7 @@ project/
 │           ├── AIInsights/        # Anomaly detection
 │           └── MockAPI/           # Mock endpoint config
 └── tests/
-    └── test_platform.py           # 49 pytest test cases (TC_01–TC_12)
+    └── test_platform.py           # 49 pytest test cases
 ```
 
 ---
