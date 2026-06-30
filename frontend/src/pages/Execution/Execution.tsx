@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
   getWorkflows, startExecution, getExecutions, cancelExecution
 } from '../../api/client'
@@ -21,6 +21,7 @@ function OutcomeDot({ outcome }: { outcome: string }) {
 function TracePanel({ executionId }: { executionId: string }) {
   const [traces, setTraces] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedTraceId, setExpandedTraceId] = useState<string | null>(null)
 
   useEffect(() => {
     setTraces([])
@@ -56,6 +57,7 @@ function TracePanel({ executionId }: { executionId: string }) {
       <table>
         <thead>
           <tr>
+            <th style={{ width: '5%' }}></th>
             <th>Step</th>
             <th>Outcome</th>
             <th>Status Code</th>
@@ -66,18 +68,55 @@ function TracePanel({ executionId }: { executionId: string }) {
         </thead>
         <tbody>
           {traces.map(t => (
-            <tr key={t.trace_id}>
-              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.step_name}</td>
-              <td><OutcomeDot outcome={t.outcome} />{t.outcome}</td>
-              <td>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: t.status_code >= 400 ? 'var(--danger)' : t.status_code >= 200 ? 'var(--success)' : 'var(--text-1)' }}>
-                  {t.status_code || '—'}
-                </span>
-              </td>
-              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.response_time} ms</td>
-              <td style={{ color: 'var(--text-2)', fontSize: 12 }}>W{t.worker_id}</td>
-              <td style={{ color: 'var(--text-2)', fontSize: 12 }}>{new Date(t.timestamp).toLocaleTimeString()}</td>
-            </tr>
+            <React.Fragment key={t.trace_id}>
+              <tr onClick={() => setExpandedTraceId(expandedTraceId === t.trace_id ? null : t.trace_id)} style={{ cursor: 'pointer' }}>
+                <td style={{ textAlign: 'center', color: 'var(--text-2)', fontSize: 12 }}>{expandedTraceId === t.trace_id ? '▼' : '▶'}</td>
+                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.step_name}</td>
+                <td><OutcomeDot outcome={t.outcome} />{t.outcome}</td>
+                <td>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: t.status_code >= 400 ? 'var(--danger)' : t.status_code >= 200 ? 'var(--success)' : 'var(--text-1)' }}>
+                    {t.status_code || '—'}
+                  </span>
+                </td>
+                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.response_time} ms</td>
+                <td style={{ color: 'var(--text-2)', fontSize: 12 }}>W{t.worker_id}</td>
+                <td style={{ color: 'var(--text-2)', fontSize: 12 }}>{new Date(t.timestamp).toLocaleTimeString()}</td>
+              </tr>
+              {expandedTraceId === t.trace_id && (
+                <tr>
+                  <td colSpan={7} style={{ background: 'var(--bg-3)', padding: '12px 16px' }}>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {t.error && (
+                        <div>
+                          <div style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 600, marginBottom: 4 }}>Error:</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--danger)', background: 'var(--bg-2)', padding: '8px', borderRadius: 4, wordBreak: 'break-all' }}>
+                            {t.error}
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 600, marginBottom: 4 }}>Response Body:</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-2)', padding: '8px', borderRadius: 4, maxHeight: 300, overflowY: 'auto', wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
+                          {t.response_body ? (
+                            <>
+                              {(() => {
+                                try {
+                                  return JSON.stringify(JSON.parse(t.response_body), null, 2)
+                                } catch {
+                                  return t.response_body
+                                }
+                              })()}
+                            </>
+                          ) : (
+                            <span style={{ color: 'var(--text-2)' }}>—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
