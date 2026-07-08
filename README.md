@@ -123,7 +123,7 @@ project/
    - **Extract Variables** — JSON map of `{"var_name": "dot.path.in.response"}`. See below.
    - **Condition** — optional, e.g. `status == 200`. If false, the step is marked `skipped`.
    - **Execution Order** — lower numbers run first.
-   - **Retry Count** — 0–5. Each retry waits 500 ms before firing.
+   - **Retry Count** — 0–5. Uses exponential backoff: 0.5s, 1s, 2s, 4s, 8s (capped at 30s).
    - **Timeout (seconds)** — per-step HTTP timeout, default 30.
 4. Click **Validate** on the workflow row to check for missing endpoints / invalid methods.
 
@@ -152,7 +152,7 @@ Go to **Execution**, pick the workflow:
 
 ### Step 4 — Read the results
 
-- **Execution panel** shows each trace as it happens: step name, outcome, status code, response time, worker ID.
+- **Execution panel** shows each trace as it happens: step name, outcome, status code, response time, worker ID. Click any trace row to expand and view the full response body and error details.
 - **Analytics** shows per-step averages, p95, and a response-time-over-time chart.
 - **AI Insights → Run Anomaly Detection** highlights latency spikes (Z > 3σ), persistent degradations, and elevated error rates.
 

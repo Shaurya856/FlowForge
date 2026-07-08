@@ -4,6 +4,23 @@ import {
 } from '../../api/client'
 import { Play, RefreshCw, Clock, CheckCircle, XCircle, Loader, Square } from 'lucide-react'
 
+function formatLocalTime(isoString: string): string {
+  let dateString = isoString
+  // If no timezone indicator (Z or ±HH:MM), assume UTC
+  if (!/Z$|[+-]\d{2}:\d{2}$/.test(dateString)) {
+    dateString += 'Z'
+  }
+  const date = new Date(dateString)
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: any = {
     success: 'badge-success', failed: 'badge-danger',
@@ -80,7 +97,7 @@ function TracePanel({ executionId }: { executionId: string }) {
                 </td>
                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.response_time} ms</td>
                 <td style={{ color: 'var(--text-2)', fontSize: 12 }}>W{t.worker_id}</td>
-                <td style={{ color: 'var(--text-2)', fontSize: 12 }}>{new Date(t.timestamp).toLocaleTimeString()}</td>
+                <td style={{ color: 'var(--text-2)', fontSize: 12 }}>{formatLocalTime(t.timestamp)}</td>
               </tr>
               {expandedTraceId === t.trace_id && (
                 <tr>
@@ -152,7 +169,7 @@ export default function Execution() {
   const [workflows, setWorkflows] = useState<any[]>([])
   const [executions, setExecutions] = useState<any[]>([])
   const [selectedExec, setSelectedExec] = useState<string | null>(null)
-  const [form, setForm] = useState({ workflow_id: '', concurrency: 1, iterations: 1, use_mock: true })
+  const [form, setForm] = useState({ workflow_id: '', concurrency: 1, iterations: 1, use_mock: false })
   const [launching, setLaunching] = useState(false)
   const [error, setError] = useState('')
 
